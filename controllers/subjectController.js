@@ -1,4 +1,4 @@
-const Subject = require("../models/subjectModel");
+const Subject = require("../models/SubjectModel");
 const paginate = require("../utils/paginate");
 const errorMessages = require("../utils/errorMessages");
 

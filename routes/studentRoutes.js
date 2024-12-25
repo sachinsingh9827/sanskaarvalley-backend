@@ -16,11 +16,11 @@ const upload = require("../middlewares/upload");
 router.use(checkLogoutTime);
 
 // Define routes
-router.post("/register", upload.single("image"), registerStudent);
+router.post("/register", upload.uploadImage.single("image"), registerStudent);
 router.get("/all-students", getAllStudents);
 
 // Update student route with image upload
-router.put("/:id", upload.single("image"), updateStudent);
+router.put("/:id", upload.uploadImage.single("image"), updateStudent);
 
 router.put("/:id", inActivateStudent);
 router.put("/reactivate/:id", reActivateStudent);

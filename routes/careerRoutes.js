@@ -11,7 +11,7 @@ const upload = require("../middlewares/upload");
 const router = express.Router();
 
 // Apply for a career
-router.post("/apply", upload.single("resume"), applyForCareer);
+router.post("/apply", upload.uploadResume.single("resume"), applyForCareer);
 
 // Get all career applications with pagination
 router.get("/", getAllCareerApplications);
@@ -19,12 +19,13 @@ router.get("/", getAllCareerApplications);
 // Get a single career application by ID
 router.get("/:id", getCareerApplicationById);
 
-// Delete a career application
+// Delete career applications (multiple deletion supported)
 router.delete("/delete", deleteCareerApplication);
 
 // Change the status of a career application
 router.put("/status/:id", changeApplicationStatus);
-// Add the route for downloading resumes
+
+// Add route for downloading resumes
 router.get("/download/:filename", (req, res) => {
   const { filename } = req.params;
   const filePath = `uploads/${filename}`;

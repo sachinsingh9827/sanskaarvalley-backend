@@ -9,39 +9,27 @@ const applyForCareer = async (req, res) => {
       return res.status(400).json({ message: "Resume file is required." });
     }
 
-    // Check if the email has already been used for an application
-    const existingApplication = await CareerApplication.findOne({ email });
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    if (existingApplication) {
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-      // Check if the last application was within the past 6 months
-      if (new Date(existingApplication.createdAt) > sixMonthsAgo) {
-        return res.status(400).json({
-          message: `You have already applied for a position on ${existingApplication.createdAt.toDateString()}. You can reapply after 6 months.`,
-        });
-      }
-    }
-
-    // Check if the mobile number has already been used for an application
-    const existingApplicationByMobile = await CareerApplication.findOne({
-      mobile,
+    // Check email and mobile reuse within 6 months
+    const existingApplication = await CareerApplication.findOne({
+      $or: [
+        { email, createdAt: { $gt: sixMonthsAgo } },
+        { mobile, createdAt: { $gt: sixMonthsAgo } },
+      ],
     });
 
-    if (existingApplicationByMobile) {
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-      // Check if the last application by mobile was within the past 6 months
-      if (new Date(existingApplicationByMobile.createdAt) > sixMonthsAgo) {
-        return res.status(400).json({
-          message: `This mobile number has already been used for an application on ${existingApplicationByMobile.createdAt.toDateString()}. You can reapply after 6 months.`,
-        });
-      }
+    if (existingApplication) {
+      const appliedDate = existingApplication.createdAt.toDateString();
+      const identifier =
+        existingApplication.email === email ? "email" : "mobile number";
+      return res.status(400).json({
+        message: `You have already applied with this ${identifier} on ${appliedDate}. You can reapply after 6 months.`,
+      });
     }
 
-    // Save application details
+    // Save the application
     const application = new CareerApplication({
       name,
       email,
@@ -50,7 +38,6 @@ const applyForCareer = async (req, res) => {
       coverLetter,
       resume: `/uploads/${req.file.filename}`,
     });
-
     await application.save();
 
     res.status(201).json({
@@ -60,24 +47,25 @@ const applyForCareer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error submitting application:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to submit application.",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to submit application.",
+        error: error.message,
+      });
   }
 };
 
 // Get all career applications with pagination
-
 const getAllCareerApplications = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query; // Default values
+    const { page = 1, limit = 10 } = req.query;
     const applications = await CareerApplication.find()
       .select(
         "name email mobile position createdAt resume coverLetter status updatedAt"
-      ) // Include all fields
-      .sort({ createdAt: -1 }) // Sort by newest applications first
+      )
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -92,10 +80,9 @@ const getAllCareerApplications = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching applications:", error);
-    res.status(500).json({
-      message: "Failed to fetch applications.",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch applications.", error: error.message });
   }
 };
 
@@ -121,19 +108,17 @@ const getCareerApplicationById = async (req, res) => {
   }
 };
 
-// Delete a career application
-// Delete multiple career applications
+// Delete career applications (supports multiple deletions)
 const deleteCareerApplication = async (req, res) => {
   try {
-    const { ids } = req.body; // Extract the selected IDs
+    const { ids } = req.body;
 
-    if (!ids || ids.length === 0) {
+    if (!ids || !ids.length) {
       return res
         .status(400)
         .json({ message: "No applications selected for deletion." });
     }
 
-    // Delete the applications using the provided IDs
     const result = await CareerApplication.deleteMany({ _id: { $in: ids } });
 
     if (result.deletedCount === 0) {
@@ -148,25 +133,27 @@ const deleteCareerApplication = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting applications:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete selected applications.",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to delete selected applications.",
+        error: error.message,
+      });
   }
 };
+
+// Change application status
 const changeApplicationStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
-    // Validate the status
     const validStatuses = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
+
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status value." });
     }
 
-    // Find the application by ID and update the status
     const application = await CareerApplication.findByIdAndUpdate(
       id,
       { status },
@@ -184,11 +171,13 @@ const changeApplicationStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating application status:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to update application status.",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to update application status.",
+        error: error.message,
+      });
   }
 };
 
