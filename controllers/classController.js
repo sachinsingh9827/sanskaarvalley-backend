@@ -1,129 +1,244 @@
-const Class = require("../models/ClassModel"); // Import your Class model
-const errorMessages = require("../utils/errorMessages");
+const Class = require("../models/ClassModel");
+const ERRORS = require("../utils/errorMessages").CLASS; // Assuming your error messages are in a config file
 
 // Create a new class
 exports.createClass = async (req, res) => {
+  console.log(req.body);
+
   try {
-    const { name, section, isActive, mainSubject, subjects } = req.body;
+    const { className, section, roomNumber, timing, mainSubject, subjects } =
+      req.body;
 
     // Validate required fields
-    if (!name || !section) {
-      return res
-        .status(400)
-        .json({ message: errorMessages.CLASS.MISSING_FIELDS });
+    if (!className) {
+      return res.status(400).json({ message: ERRORS.MISSING_NAME });
     }
 
-    // Create a new class instance
+    if (!roomNumber) {
+      return res.status(400).json({ message: ERRORS.MISSING_ROOM_NUMBER });
+    }
+
+    if (!timing) {
+      return res.status(400).json({ message: ERRORS.MISSING_TIMING });
+    }
+
+    if (!subjects || subjects.length === 0) {
+      return res.status(400).json({ message: ERRORS.SUBJECTS_REQUIRED });
+    }
+
+    // Check specific condition for higher classes
+    if (
+      (className === "11" || className === "12") &&
+      (!mainSubject || mainSubject.length === 0)
+    ) {
+      return res.status(400).json({ message: ERRORS.MAIN_SUBJECTS_REQUIRED });
+    }
+
+    // Create new class object with all fields
     const newClass = new Class({
-      name,
-      section,
-      isActive: isActive !== undefined ? isActive : true, // Use provided value or default to true
-      mainSubject: mainSubject || "", // Use provided value or default to empty string
-      subjects: subjects || [], // Use provided subjects or default to empty array
+      className,
+      section: section || "A", // Default to "A" if not provided
+      roomNumber,
+      timing,
+      mainSubject: mainSubject || [], // Default to an empty array
+      subjects,
     });
 
-    // Save the class to the database
     await newClass.save();
 
     res.status(201).json({
-      message: errorMessages.CLASS.CLASS_ADDED_SUCCESS,
+      message: ERRORS.CLASS_ADDED_SUCCESS,
       class: newClass,
     });
   } catch (error) {
-    console.error("Class Creation Error:", error);
-    res.status(500).json({
-      message: errorMessages.CLASS.CLASS_CREATION_FAILED,
-      error: error.message,
-    });
+    res
+      .status(400)
+      .json({ message: ERRORS.CLASS_CREATION_FAILED, error: error.message });
   }
 };
 
-// Get all classes with pagination
+// Assuming you have an error messages file
+
 exports.getAllClasses = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    // Fetch all classes and populate the subject names
     const classes = await Class.find()
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .populate("subjects", "name") // Populate 'subjects' field with 'name' of subjects
       .exec();
 
-    const count = await Class.countDocuments();
+    if (classes.length === 0) {
+      return res.status(404).json({ message: ERRORS.NOT_FOUND });
+    }
 
-    res.status(200).json({
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-      classes,
-    });
+    // Return the classes with populated subject names
+    res.status(200).json(classes);
   } catch (error) {
-    console.error("Error fetching classes:", error);
-    res.status(500).json({
-      message: errorMessages.CLASS.CLASS_FETCH_FAILED,
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ message: ERRORS.CLASS_FETCH_FAILED, error: error.message });
   }
 };
 
-// Update a class
+// Get a single class by ID
+exports.getClassById = async (req, res) => {
+  try {
+    const classData = await Class.findById(req.params.id);
+    if (!classData) {
+      return res.status(404).json({ message: ERRORS.NOT_FOUND });
+    }
+    res.status(200).json(classData);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: ERRORS.FETCH_FAILED, error: error.message });
+  }
+};
+
+// Update a class by ID
 exports.updateClass = async (req, res) => {
-  const { id } = req.params;
-  const { name, section, isActive, mainSubject, subjects } = req.body;
-
   try {
-    const updatedClass = await Class.findById(id);
-    if (!updatedClass) {
-      return res
-        .status(404)
-        .json({ message: errorMessages.CLASS.CLASS_NOT_FOUND });
+    const { className, roomNumber, timing, subjects, mainSubject } = req.body;
+
+    // Validate required fields if they are being updated
+    if (className === "") {
+      return res.status(400).json({ message: ERRORS.MISSING_NAME });
     }
 
-    // Update fields only if provided
-    updatedClass.name = name || updatedClass.name;
-    updatedClass.section = section || updatedClass.section;
-    updatedClass.isActive =
-      isActive !== undefined ? isActive : updatedClass.isActive;
-    updatedClass.mainSubject = mainSubject || updatedClass.mainSubject;
-    updatedClass.subjects = subjects || updatedClass.subjects;
+    if (roomNumber === "") {
+      return res.status(400).json({ message: ERRORS.MISSING_ROOM_NUMBER });
+    }
 
-    // Save the updated class document
-    await updatedClass.save();
+    if (timing === "") {
+      return res.status(400).json({ message: ERRORS.MISSING_TIMING });
+    }
+
+    if (subjects && subjects.length === 0) {
+      return res.status(400).json({ message: ERRORS.SUBJECTS_REQUIRED });
+    }
+
+    if (
+      (className === "11" || className === "12") &&
+      mainSubject &&
+      mainSubject.length === 0
+    ) {
+      return res.status(400).json({ message: ERRORS.MAIN_SUBJECTS_REQUIRED });
+    }
+
+    // Perform the update
+    const updatedClass = await Class.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedClass) {
+      return res.status(404).json({ message: ERRORS.NOT_FOUND });
+    }
 
     res.status(200).json({
-      message: errorMessages.CLASS.CLASS_UPDATED_SUCCESS,
+      message: ERRORS.CLASS_UPDATED_SUCCESS,
       class: updatedClass,
     });
   } catch (error) {
-    console.error("Class Update Error:", error);
-    res.status(500).json({
-      message: errorMessages.CLASS.CLASS_UPDATE_FAILED,
+    res.status(400).json({
+      message: ERRORS.CLASS_UPDATE_FAILED,
       error: error.message,
     });
   }
 };
 
-// Deactivate a class
-exports.deactivateClass = async (req, res) => {
-  const { id } = req.params;
-
+// Delete a class by ID
+exports.deleteClass = async (req, res) => {
   try {
-    const updatedClass = await Class.findById(id);
-    if (!updatedClass) {
-      return res
-        .status(404)
-        .json({ message: errorMessages.CLASS.CLASS_NOT_FOUND });
+    const deletedClass = await Class.findByIdAndDelete(req.params.id);
+    if (!deletedClass) {
+      return res.status(404).json({ message: ERRORS.NOT_FOUND });
+    }
+    res.status(200).json({ message: ERRORS.DELETED_SUCCESS });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: ERRORS.DELETE_FAILED, error: error.message });
+  }
+};
+
+// Toggle active/deactive status of a class
+exports.toggleClassStatus = async (req, res) => {
+  try {
+    const classData = await Class.findById(req.params.id);
+    if (!classData) {
+      return res.status(404).json({ message: ERRORS.NOT_FOUND });
     }
 
-    // Set isActive to false
-    updatedClass.isActive = false;
-    await updatedClass.save();
+    classData.isActive = !classData.isActive; // Toggle the status
+    await classData.save();
+
+    const statusMessage = classData.isActive
+      ? ERRORS.CLASS_ACTIVATED_SUCCESS
+      : ERRORS.CLASS_DEACTIVATED_SUCCESS;
+
+    res.status(200).json({ message: statusMessage, class: classData });
+  } catch (error) {
+    res.status(400).json({
+      message: ERRORS.CLASS_DEACTIVATION_FAILED,
+      error: error.message,
+    });
+  }
+};
+
+// Promote all students in a class to the next class
+exports.promoteStudents = async (req, res) => {
+  try {
+    const { currentClassId, nextClassId } = req.body;
+
+    if (!currentClassId || !nextClassId) {
+      return res
+        .status(400)
+        .json({ message: ERRORS.MISSING_PROMOTION_DETAILS });
+    }
+
+    const currentClass = await Class.findById(currentClassId);
+    const nextClass = await Class.findById(nextClassId);
+
+    if (!currentClass || !nextClass) {
+      return res.status(404).json({ message: ERRORS.NOT_FOUND });
+    }
+
+    currentClass.promotionEligible = true; // Mark as eligible for promotion
+    currentClass.promotedTo = nextClassId;
+
+    await currentClass.save();
 
     res.status(200).json({
-      message: errorMessages.CLASS.CLASS_DEACTIVATED_SUCCESS,
-      class: updatedClass,
+      message: ERRORS.CLASS_PROMOTED_SUCCESS,
+      class: currentClass,
     });
   } catch (error) {
-    console.error("Class Deactivation Error:", error);
+    res.status(400).json({
+      message: ERRORS.CLASS_PROMOTION_FAILED,
+      error: error.message,
+    });
+  }
+};
+exports.getActiveClasses = async (req, res) => {
+  try {
+    // Find all classes where `isActive` is true
+    const activeClasses = await Class.find({ isActive: true });
+
+    if (activeClasses.length === 0) {
+      return res.status(404).json({ message: ERRORS.NO_ACTIVE_CLASSES_FOUND });
+    }
+
+    res.status(200).json({
+      message: ERRORS.ACTIVE_CLASSES_FETCH_SUCCESS,
+      classes: activeClasses,
+    });
+  } catch (error) {
     res.status(500).json({
-      message: errorMessages.CLASS.CLASS_DEACTIVATION_FAILED,
+      message: ERRORS.ACTIVE_CLASSES_FETCH_FAILED,
       error: error.message,
     });
   }

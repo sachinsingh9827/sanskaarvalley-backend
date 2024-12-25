@@ -14,10 +14,9 @@ const contactSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      lowercase: true,
-      trim: true,
+      unique: true,
     },
-    address: {
+    subject: {
       type: String,
       required: true,
     },
@@ -29,6 +28,6 @@ const contactSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Contact = mongoose.model("Contact", contactSchema);
+const Contact = mongoose.model("userContact", contactSchema);
 
 module.exports = Contact;

@@ -1,19 +1,23 @@
-// routes/notificationRoutes.js
 const express = require("express");
-const router = express.Router();
 const {
   createNotification,
   getAllNotifications,
-  deleteNotification,
+  updateNotification,
+  deleteNotifications,
 } = require("../controllers/notificationController");
 
-// Route for creating a notification
+const router = express.Router();
+
+// Route to create a new notification
 router.post("/", createNotification);
 
-// Route for getting all notifications
+// Route to get all notifications with pagination
 router.get("/", getAllNotifications);
 
-// Route for deleting a notification by ID
-router.delete("/:id", deleteNotification);
+// Route to update notification by ID
+router.put("/:id", updateNotification); // Ensure this is correct
+
+// Route to delete notification by ID
+router.delete("/:id", deleteNotifications);
 
 module.exports = router;

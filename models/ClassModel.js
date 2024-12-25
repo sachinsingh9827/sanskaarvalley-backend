@@ -1,27 +1,28 @@
 const mongoose = require("mongoose");
 
 const classSchema = new mongoose.Schema({
-  name: {
+  className: {
     type: String,
-    required: true,
+    required: [true, "Class name is required."], // Added validation message
   },
   section: {
     type: String,
-    required: true,
+    default: "A",
+  },
+  roomNumber: {
+    type: String,
+    required: [true, "Room number is required."], // Added validation message
   },
   isActive: {
     type: Boolean,
-    default: true, // Default value for isActive
+    default: true,
   },
-  mainSubject: {
+  timing: {
     type: String,
-    default: "", // Default value for mainSubject
+    required: [true, "Class timing is required."], // Added validation message
   },
-  subjects: {
-    type: [String], // Array of subjects
-    default: [], // Default to an empty array if not provided
-    required: true,
-  },
+  mainSubject: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
+  subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
   createdAt: {
     type: Date,
     default: Date.now,

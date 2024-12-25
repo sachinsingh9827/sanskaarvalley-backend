@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 const {
   registerStudent,
-  getAllStudents,
-  getStudentById,
   updateStudent,
-  inActiveStudent,
+  inActivateStudent,
+  getAllStudents,
+  reActivateStudent,
+  deleteStudentPermanently,
+  getStudentById,
 } = require("../controllers/studentController");
 const checkLogoutTime = require("../middlewares/checkLogoutTime");
 const upload = require("../middlewares/upload");
@@ -14,13 +16,15 @@ const upload = require("../middlewares/upload");
 router.use(checkLogoutTime);
 
 // Define routes
-router.post("/register", registerStudent);
-router.get("/", getAllStudents);
-router.get("/:id", getStudentById);
+router.post("/register", upload.single("image"), registerStudent);
+router.get("/all-students", getAllStudents);
 
 // Update student route with image upload
 router.put("/:id", upload.single("image"), updateStudent);
 
-router.put("/:id", inActiveStudent);
+router.put("/:id", inActivateStudent);
+router.put("/reactivate/:id", reActivateStudent);
+router.delete("/:id", deleteStudentPermanently);
+router.get("/:id", getStudentById);
 
 module.exports = router;

@@ -1,20 +1,16 @@
-// controllers/notificationController.js
 const Notification = require("../models/notificationModel");
 const errorMessages = require("../utils/errorMessages");
+const { validateNotificationData } = require("../utils/notificationValidation");
+const paginate = require("../utils/paginate");
 
 // Create a new notification
 const createNotification = async (req, res) => {
   try {
-    const { title, message } = req.body;
+    const { error } = validateNotificationData(req.body);
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
 
-    // Basic validation
-    if (!title || !message) {
-      return res
-        .status(400)
-        .json({ message: errorMessages.NOTIFICATION.GENERAL_ERROR });
-    }
-
-    const notification = new Notification({ title, message });
+    const notification = new Notification(req.body);
     await notification.save();
 
     return res
@@ -28,11 +24,23 @@ const createNotification = async (req, res) => {
   }
 };
 
-// Get all notifications
+// Get all notifications with pagination
 const getAllNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find();
-    return res.status(200).json(notifications);
+    const { skip, limit, sort } = paginate(req.query);
+    const totalNotifications = await Notification.countDocuments();
+
+    const notifications = await Notification.find()
+      .skip(skip)
+      .limit(limit)
+      .sort(sort);
+
+    return res.status(200).json({
+      currentPage: req.query.page || 1,
+      totalPages: Math.ceil(totalNotifications / limit),
+      totalNotifications,
+      notifications,
+    });
   } catch (error) {
     console.error(error);
     return res
@@ -42,16 +50,13 @@ const getAllNotifications = async (req, res) => {
 };
 
 // Delete a notification by ID
-const deleteNotification = async (req, res) => {
+const deleteNotifications = async (req, res) => {
   try {
-    const { id } = req.params;
-    const notification = await Notification.findByIdAndDelete(id);
-
-    if (!notification) {
+    const notification = await Notification.findByIdAndDelete(req.params.id);
+    if (!notification)
       return res
         .status(404)
         .json({ message: errorMessages.NOTIFICATION.NOT_FOUND });
-    }
 
     return res
       .status(200)
@@ -64,8 +69,38 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+// Update a notification by ID
+const updateNotification = async (req, res) => {
+  try {
+    const { error } = validateNotificationData(req.body);
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
+
+    const updatedNotification = await Notification.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedNotification)
+      return res
+        .status(404)
+        .json({ message: errorMessages.NOTIFICATION.NOT_FOUND });
+
+    return res.status(200).json({
+      message: errorMessages.NOTIFICATION.UPDATED_SUCCESS,
+      updatedNotification,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: errorMessages.NOTIFICATION.UPDATE_FAILED });
+  }
+};
+
 module.exports = {
   createNotification,
   getAllNotifications,
-  deleteNotification,
+  deleteNotifications,
+  updateNotification,
 };

@@ -2,15 +2,37 @@ const express = require("express");
 const router = express.Router();
 const {
   createClass,
-  updateClass,
-  deactivateClass,
   getAllClasses,
+  getClassById,
+  updateClass,
+  deleteClass,
+  toggleClassStatus,
+  getActiveClasses,
+  promoteStudents,
 } = require("../controllers/classController");
 
-// Routes
-router.post("/", createClass); // Route to create a class
-router.put("/:id", updateClass); // Route to update a class by ID
-router.patch("/:id/deactivate", deactivateClass); // Route to deactivate a class by ID
-router.get("/", getAllClasses); // Route to get all classes
+// Create a new class
+router.post("/", createClass);
+
+// Get all classes
+router.get("/", getAllClasses);
+
+// Get all active classes
+router.get("/active", getActiveClasses);
+
+// Get a single class by ID
+router.get("/:id", getClassById);
+
+// Update a class by ID
+router.put("/:id", updateClass);
+
+// Delete a class by ID
+router.delete("/:id", deleteClass);
+
+// Toggle active/deactive status of a class
+router.put("/toggle-status/:id", toggleClassStatus);
+
+// Promote students from one class to another
+router.post("/promote", promoteStudents);
 
 module.exports = router;
