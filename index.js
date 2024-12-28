@@ -20,6 +20,7 @@ const privacyPolicies = require("./routes/privacyPolicyRoutes");
 const termsAndConditions = require("./routes/termsAndConditionsRoutes");
 const careerRoutes = require("./routes/careerRoutes");
 const jobRequirement = require("./routes/jobRequirementRoutes");
+const schoolCalendarRoutes = require("./routes/schoolCalendarRoutes");
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use("/privacy-policies", privacyPolicies);
 app.use("/terms-and-conditions", termsAndConditions);
 app.use("/career", careerRoutes);
 app.use("/job-requirement", jobRequirement);
+app.use("/school-calendar", schoolCalendarRoutes);
 
 // Default route
 app.get("/", (req, res) => {
