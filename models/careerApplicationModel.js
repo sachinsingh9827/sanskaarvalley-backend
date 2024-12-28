@@ -16,16 +16,17 @@ const careerApplicationSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    position: {
-      type: String,
-      required: true,
-    },
     resume: {
       type: String, // File path or URL of uploaded resume
       required: true,
     },
     coverLetter: {
-      type: String, // Cover letter text (optional)
+      type: String,
+      default: "", // Cover letter text (optional)
+    },
+    position: {
+      type: String,
+      default: "",
     },
     status: {
       type: String,

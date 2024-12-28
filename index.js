@@ -4,6 +4,7 @@ const connectDB = require("./config/db"); // Ensure the path is correct
 const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
+
 // Import route handlers
 const studentRoutes = require("./routes/studentRoutes");
 const adminRoutes = require("./routes/adminRoutes");

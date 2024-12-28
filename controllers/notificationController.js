@@ -48,7 +48,26 @@ const getAllNotifications = async (req, res) => {
       .json({ message: errorMessages.NOTIFICATION.GENERAL_ERROR });
   }
 };
+const deleteOldNotifications = async (req, res) => {
+  try {
+    // Get the current date and subtract 3 days
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // 3 days in milliseconds
 
+    // Delete notifications older than 3 days
+    const result = await Notification.deleteMany({
+      createdAt: { $lt: threeDaysAgo },
+    });
+
+    return res.status(200).json({
+      message: `Deleted ${result.deletedCount} old notifications successfully.`,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: errorMessages.NOTIFICATION.DELETE_FAILED });
+  }
+};
 // Delete a notification by ID
 const deleteNotifications = async (req, res) => {
   try {
@@ -103,4 +122,5 @@ module.exports = {
   getAllNotifications,
   deleteNotifications,
   updateNotification,
+  deleteOldNotifications,
 };

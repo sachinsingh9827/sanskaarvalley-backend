@@ -4,6 +4,7 @@ const {
   getAllNotifications,
   updateNotification,
   deleteNotifications,
+  deleteOldNotifications,
 } = require("../controllers/notificationController");
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.put("/:id", updateNotification); // Ensure this is correct
 
 // Route to delete notification by ID
 router.delete("/:id", deleteNotifications);
+router.delete("/notifications/delete-old", deleteOldNotifications);
 
 module.exports = router;

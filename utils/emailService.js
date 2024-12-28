@@ -1,33 +1,40 @@
-// emailService.js
+// services/emailService.js
 const nodemailer = require("nodemailer");
-const dotenv = require("dotenv");
+require("dotenv").config();
 
-// Load environment variables
-dotenv.config();
-
-// Create a transporter
-const transporter = nodemailer.createTransport({
-  service: process.env.NODEMAILER_SERVICE,
-  auth: {
-    user: process.env.NODEMAILER_USERNAME,
-    pass: process.env.NODEMAILER_PASSWORD,
-  },
-});
-
-// Function to send email
-const sendEmail = async (to, subject, text) => {
+const sendContactMessageEmail = async (contactMessage) => {
   try {
-    const info = await transporter.sendMail({
-      from: process.env.NODEMAILER_USERNAME,
-      to,
-      subject,
-      text,
+    // Create reusable transporter object using SMTP transport
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // or any other email provider like SendGrid, Mailgun, etc.
+      auth: {
+        user: process.env.EMAIL_USER, // Your email address
+        pass: process.env.EMAIL_PASS, // Your email password
+      },
     });
-    console.log("Email sent:", info.response);
+
+    // Define the email message options
+    const mailOptions = {
+      from: process.env.EMAIL_USER, // sender address
+      to: process.env.EMAIL_USER, // recipient address (admin or support email)
+      subject: `New Contact Message from ${contactMessage.name}`, // Subject line
+      html: `
+        <h2>Contact Message Details</h2>
+        <p><strong>Name:</strong> ${contactMessage.name}</p>
+        <p><strong>Email:</strong> ${contactMessage.email}</p>
+        <p><strong>Mobile:</strong> ${contactMessage.mobile}</p>
+        <p><strong>Subject:</strong> ${contactMessage.subject}</p>
+        <p><strong>Message:</strong> ${contactMessage.message}</p>
+      `, // HTML body content
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
+    console.log("Contact message email sent successfully!");
   } catch (error) {
     console.error("Error sending email:", error);
+    throw new Error("Failed to send contact message email.");
   }
 };
 
-// Export the sendEmail function
-module.exports = { sendEmail };
+module.exports = { sendContactMessageEmail };

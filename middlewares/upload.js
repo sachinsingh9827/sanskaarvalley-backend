@@ -1,10 +1,11 @@
 const multer = require("multer");
+const path = require("path");
 
 // Disk storage for uploading images
-const diskStorage = multer.diskStorage({
+const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log("Saving image to uploads/ directory");
-    cb(null, "uploads/"); // Directory where images will be stored
+    console.log("Saving image to uploads/images/ directory");
+    cb(null, "uploads/images/"); // Directory where images will be stored
   },
   filename: (req, file, cb) => {
     console.log("Generating unique image file name");
@@ -12,13 +13,12 @@ const diskStorage = multer.diskStorage({
     cb(null, uniqueSuffix + "-" + file.originalname); // Unique file name for image
   },
 });
-const uploadImage = multer({ storage: diskStorage });
 
-// Disk storage for uploading resumes (optional - different destination or other logic)
+// Disk storage for uploading resumes
 const resumeStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log("Saving resume to uploads/ directory");
-    cb(null, "uploads/"); // Directory where resumes will be stored
+    console.log("Saving resume to uploads/resumes/ directory");
+    cb(null, "uploads/resumes/"); // Directory where resumes will be stored
   },
   filename: (req, file, cb) => {
     console.log("Generating unique resume file name");
@@ -26,6 +26,42 @@ const resumeStorage = multer.diskStorage({
     cb(null, uniqueSuffix + "-" + file.originalname); // Unique file name for resume
   },
 });
-const uploadResume = multer({ storage: resumeStorage });
 
+// Middleware for uploading images
+const uploadImage = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5 MB for images
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|gif/; // Allowed image formats
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error("Error: File type not supported!"));
+  },
+});
+
+// Middleware for uploading resumes
+const uploadResume = multer({
+  storage: resumeStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // Limit to 10 MB for resumes
+  fileFilter: (req, file, cb) => {
+    const filetypes = /pdf|doc|docx/; // Allowed resume formats
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error("Error: File type not supported!"));
+  },
+});
+
+// Export the upload middlewares
 module.exports = { uploadImage, uploadResume };

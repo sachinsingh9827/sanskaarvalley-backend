@@ -1,18 +1,23 @@
-const CareerApplication = require("../models/careerApplicationModel");
+const CareerApplication = require("../models/careerApplicationModel"); // Adjust the path as necessary
 
 // Submit a new career application
 const applyForCareer = async (req, res) => {
+  console.log("Request body:", req.body);
+
   try {
+    // Destructure the required fields from the request body
     const { name, email, mobile, position, coverLetter } = req.body;
 
+    // Check if a resume file was uploaded
     if (!req.file) {
       return res.status(400).json({ message: "Resume file is required." });
     }
 
+    // Get the date six months ago
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    // Check email and mobile reuse within 6 months
+    // Check for existing applications with the same email or mobile number within the last 6 months
     const existingApplication = await CareerApplication.findOne({
       $or: [
         { email, createdAt: { $gt: sixMonthsAgo } },
@@ -20,6 +25,7 @@ const applyForCareer = async (req, res) => {
       ],
     });
 
+    // If an existing application is found, return an error message
     if (existingApplication) {
       const appliedDate = existingApplication.createdAt.toDateString();
       const identifier =
@@ -29,17 +35,20 @@ const applyForCareer = async (req, res) => {
       });
     }
 
-    // Save the application
+    // Create a new career application
     const application = new CareerApplication({
       name,
       email,
       mobile,
       position,
       coverLetter,
-      resume: `/uploads/${req.file.filename}`,
+      resume: `/uploads/resumes/${req.file.filename}`, // Adjust the path based on your storage structure
     });
+
+    // Save the application to the database
     await application.save();
 
+    // Respond with a success message
     res.status(201).json({
       success: true,
       message: "Career application submitted successfully.",
@@ -47,13 +56,11 @@ const applyForCareer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error submitting application:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to submit application.",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to submit application.",
+      error: error.message, // Include the error message for debugging
+    });
   }
 };
 
@@ -80,9 +87,10 @@ const getAllCareerApplications = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching applications:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch applications.", error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch applications.",
+      error: error.message,
+    });
   }
 };
 
@@ -102,9 +110,10 @@ const getCareerApplicationById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching application:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch application.", error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch application.",
+      error: error.message,
+    });
   }
 };
 
@@ -133,13 +142,11 @@ const deleteCareerApplication = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting applications:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to delete selected applications.",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete selected applications.",
+      error: error.message,
+    });
   }
 };
 
@@ -171,13 +178,11 @@ const changeApplicationStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating application status:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to update application status.",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to update application status.",
+      error: error.message,
+    });
   }
 };
 
