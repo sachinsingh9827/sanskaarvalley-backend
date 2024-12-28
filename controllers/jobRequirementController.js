@@ -190,15 +190,11 @@ const toggleJobRequirementStatus = async (req, res) => {
     }
 
     // Get the current date in 'YYYY-MM-DD' format for comparison
-    const currentDate = new Date();
-    const closingDate = new Date(job.closingDate);
-
-    // Set the time to midnight for both dates to ignore time components
-    currentDate.setHours(0, 0, 0, 0);
-    closingDate.setHours(0, 0, 0, 0);
+    const currentDate = new Date().toISOString().split("T")[0];
+    const closingDate = new Date(job.closingDate).toISOString().split("T")[0];
 
     // Check if the closing date matches the current date
-    if (closingDate.getTime() === currentDate.getTime()) {
+    if (closingDate === currentDate) {
       job.isActive = false; // Automatically deactivate the job
     } else {
       // Toggle the isActive field
