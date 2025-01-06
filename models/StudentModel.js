@@ -13,7 +13,7 @@ const StudentSchema = new mongoose.Schema(
     }, // Reference to Class model
     specialSubject: { type: String, default: "" }, // Special subject field for classes 11 and 12
     password: { type: String, required: true },
-    image: { type: String, default: "" },
+    image: { type: String, default: "" }, // Path to the uploaded image
     isActive: { type: Boolean, default: true },
     address: {
       street: String,
@@ -25,18 +25,11 @@ const StudentSchema = new mongoose.Schema(
       fatherName: String,
       motherName: String,
       fatherPhone: String,
-      motherPhone: String,
       email: String,
     },
     dateOfEnrollment: {
       type: Date,
       default: Date.now,
-    },
-    guardianName: { type: String },
-    emergencyContact: {
-      name: String,
-      relation: String,
-      phone: String,
     },
     finalStatus: {
       type: String,

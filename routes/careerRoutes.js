@@ -11,7 +11,7 @@ const upload = require("../middlewares/upload");
 const router = express.Router();
 
 // Apply for a career
-router.post("/", upload.uploadResume.single("resume"), applyForCareer);
+// router.post("/", upload.uploadResume.single("resume"), applyForCareer);
 
 // Get all career applications with pagination
 router.get("/", getAllCareerApplications);

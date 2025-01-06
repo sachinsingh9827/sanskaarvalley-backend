@@ -189,16 +189,26 @@ const toggleJobRequirementStatus = async (req, res) => {
       return res.status(404).json({ message: "Job requirement not found." });
     }
 
-    // Get the current date in 'YYYY-MM-DD' format for comparison
-    const currentDate = new Date().toISOString().split("T")[0];
-    const closingDate = new Date(job.closingDate).toISOString().split("T")[0];
+    // Get the current date in 'YYYY-MM-DD' format
+    const currentDate = new Date();
+    const currentDateString = currentDate.toISOString().split("T")[0];
+
+    // Parse the closing date from the job
+    const closingDate = new Date(job.closingDate);
+    const closingDateString = closingDate.toISOString().split("T")[0];
+
+    console.log(
+      `Current Date: ${currentDateString}, Closing Date: ${closingDateString}`
+    );
 
     // Check if the closing date matches the current date
-    if (closingDate === currentDate) {
+    if (closingDateString === currentDateString) {
       job.isActive = false; // Automatically deactivate the job
+      console.log("Job is deactivated due to closing date.");
     } else {
       // Toggle the isActive field
       job.isActive = !job.isActive;
+      console.log(`Job is toggled. New status: ${job.isActive}`);
     }
 
     // Save the updated job

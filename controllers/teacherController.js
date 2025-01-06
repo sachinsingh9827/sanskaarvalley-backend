@@ -1,10 +1,22 @@
 const Teacher = require("../models/TeacherModel");
 const errorMessages = require("../utils/errorMessages"); // Import error messages
 
+// Generate a unique employee ID
+const generateEmployeeId = () => {
+  return "EMP-" + Math.floor(Math.random() * 1000000);
+};
+
+// Check if the generated employee ID already exists
+const checkEmployeeIdUnique = async (employeeId) => {
+  const existingTeacher = await Teacher.findOne({ employeeId });
+  return existingTeacher ? true : false;
+};
+
 // Create teacher
 exports.createTeacher = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, subjectsTaught, class: classId } = req.body;
+
     // Check if the email already exists
     const existingTeacher = await Teacher.findOne({ email });
     if (existingTeacher) {
@@ -13,9 +25,31 @@ exports.createTeacher = async (req, res) => {
       });
     }
 
-    // Create new teacher
-    const teacher = new Teacher(req.body);
+    // Generate unique employeeId
+    let employeeId = generateEmployeeId();
+    let isEmployeeIdTaken = await checkEmployeeIdUnique(employeeId);
+
+    // If employeeId is already taken, regenerate until it's unique
+    while (isEmployeeIdTaken) {
+      employeeId = generateEmployeeId();
+      isEmployeeIdTaken = await checkEmployeeIdUnique(employeeId);
+    }
+
+    // If employeeId is still taken, return a specific message
+    if (isEmployeeIdTaken) {
+      return res.status(400).json({
+        message: "Employee ID is already in use, please try again.",
+      });
+    }
+
+    // Create new teacher with validated subjects and class assignment
+    const teacher = new Teacher({
+      ...req.body,
+      employeeId, // Use the generated unique employeeId here
+    });
+
     await teacher.save();
+
     return res.status(201).json({
       message: errorMessages.TEACHER.TEACHER_ADDED_SUCCESS,
       teacher,
