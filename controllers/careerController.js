@@ -3,7 +3,7 @@ const CareerApplication = require("../models/careerApplicationModel");
 // Submit a new career application
 const applyForCareer = async (req, res) => {
   console.log("Request body:", req.body);
-
+  console.log("Uploaded file:", req.file);
   try {
     const { name, email, mobile, position, coverLetter } = req.body;
 
@@ -11,25 +11,12 @@ const applyForCareer = async (req, res) => {
       return res.status(400).json({ message: "Resume file is required." });
     }
 
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-    const existingApplication = await CareerApplication.findOne({
-      $or: [
-        { email, createdAt: { $gt: sixMonthsAgo } },
-        { mobile, createdAt: { $gt: sixMonthsAgo } },
-      ],
-    });
-
-    if (existingApplication) {
-      const appliedDate = existingApplication.createdAt.toDateString();
-      const identifier =
-        existingApplication.email === email ? "email" : "mobile number";
-      return res.status(400).json({
-        message: `You have already applied with this ${identifier} on ${appliedDate}. You can reapply after 6 months.`,
-      });
+    // Validate required fields
+    if (!name || !email || !mobile || !position) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Create a new application entry
     const application = new CareerApplication({
       name,
       email,
