@@ -5,19 +5,15 @@ const applyForCareer = async (req, res) => {
   console.log("Request body:", req.body);
 
   try {
-    // Destructure the required fields from the request body
     const { name, email, mobile, position, coverLetter } = req.body;
 
-    // Check if a resume file was uploaded
     if (!req.file) {
       return res.status(400).json({ message: "Resume file is required." });
     }
 
-    // Get the date six months ago
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    // Check for existing applications with the same email or mobile number within the last 6 months
     const existingApplication = await CareerApplication.findOne({
       $or: [
         { email, createdAt: { $gt: sixMonthsAgo } },
@@ -25,7 +21,6 @@ const applyForCareer = async (req, res) => {
       ],
     });
 
-    // If an existing application is found, return an error message
     if (existingApplication) {
       const appliedDate = existingApplication.createdAt.toDateString();
       const identifier =
@@ -35,20 +30,17 @@ const applyForCareer = async (req, res) => {
       });
     }
 
-    // Create a new career application
     const application = new CareerApplication({
       name,
       email,
       mobile,
       position,
       coverLetter,
-      resume: `/uploads/resumes/${req.file.filename}`, // Adjust the path based on your storage structure
+      resume: `/uploads/resumes/${req.file.filename}`,
     });
 
-    // Save the application to the database
     await application.save();
 
-    // Respond with a success message
     res.status(201).json({
       success: true,
       message: "Career application submitted successfully.",
@@ -59,7 +51,7 @@ const applyForCareer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to submit application.",
-      error: error.message, // Include the error message for debugging
+      error: error.message,
     });
   }
 };

@@ -17,47 +17,51 @@ exports.createTeacher = async (req, res) => {
   try {
     const { email, subjectsTaught, class: classId } = req.body;
 
-    // Check if the email already exists
+    // Check for existing teacher email
     const existingTeacher = await Teacher.findOne({ email });
     if (existingTeacher) {
       return res.status(400).json({
-        message: errorMessages.TEACHER.EMAIL_ALREADY_USED,
+        message: "Email already in use. Please use a different email.",
       });
     }
 
-    // Generate unique employeeId
+    // Validate class ID
+    const classExists = await Class.findById(classId);
+    if (!classExists) {
+      return res.status(400).json({ message: "Invalid class ID provided." });
+    }
+
+    // Generate unique employee ID
     let employeeId = generateEmployeeId();
     let isEmployeeIdTaken = await checkEmployeeIdUnique(employeeId);
 
-    // If employeeId is already taken, regenerate until it's unique
     while (isEmployeeIdTaken) {
       employeeId = generateEmployeeId();
       isEmployeeIdTaken = await checkEmployeeIdUnique(employeeId);
     }
 
-    // If employeeId is still taken, return a specific message
     if (isEmployeeIdTaken) {
       return res.status(400).json({
-        message: "Employee ID is already in use, please try again.",
+        message: "Failed to generate a unique employee ID. Please try again.",
       });
     }
 
-    // Create new teacher with validated subjects and class assignment
+    // Create teacher
     const teacher = new Teacher({
       ...req.body,
-      employeeId, // Use the generated unique employeeId here
+      employeeId,
     });
 
     await teacher.save();
 
     return res.status(201).json({
-      message: errorMessages.TEACHER.TEACHER_ADDED_SUCCESS,
+      message: "Teacher added successfully.",
       teacher,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in createTeacher:", err.message, err.stack);
     return res.status(500).json({
-      message: errorMessages.TEACHER.GENERAL_ERROR,
+      message: `An error occurred: ${err.message}`, // Include error details
     });
   }
 };
