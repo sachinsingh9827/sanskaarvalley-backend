@@ -1,4 +1,4 @@
-const CareerApplication = require("../models/careerApplicationModel"); // Adjust the path as necessary
+const CareerApplication = require("../models/careerApplicationModel");
 
 // Submit a new career application
 const applyForCareer = async (req, res) => {

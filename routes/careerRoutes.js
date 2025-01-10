@@ -1,7 +1,13 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const CareerApplication = require("../models/careerApplicationModel");
+const {
+  applyForCareer,
+  getAllCareerApplications,
+  getCareerApplicationById,
+  deleteCareerApplication,
+  changeApplicationStatus,
+} = require("../controllers/careerController");
 
 const router = express.Router();
 
@@ -37,48 +43,11 @@ const upload = multer({
 });
 
 // POST Route to Submit Career Application
-router.post("/apply", upload.single("resume"), async (req, res) => {
-  try {
-    const { name, email, mobile, coverLetter, position } = req.body;
+router.post("/apply", upload.single("resume"), applyForCareer);
 
-    // Validate required fields
-    if (!name || !email || !mobile || !req.file) {
-      return res.status(400).json({
-        message: "All required fields must be provided, including resume.",
-      });
-    }
+// GET Route to Fetch All Applications
+router.get("/", getAllCareerApplications);
 
-    // Create a new application entry
-    const application = new CareerApplication({
-      name,
-      email,
-      mobile,
-      resume: req.file.path, // Save file path
-      coverLetter,
-      position,
-    });
-
-    await application.save();
-    res
-      .status(201)
-      .json({ message: "Application submitted successfully", application });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error submitting application", error: error.message });
-  }
-});
-
-// GET Route to Fetch All Applications (Optional, as an example)
-router.get("/", async (req, res) => {
-  try {
-    const applications = await CareerApplication.find().sort({ createdAt: -1 });
-    res.status(200).json({ applications });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching applications", error: error.message });
-  }
-});
+// Other routes can be added here as needed
 
 module.exports = router;

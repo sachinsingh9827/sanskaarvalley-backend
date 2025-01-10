@@ -26,7 +26,7 @@ const careerApplicationSchema = new mongoose.Schema(
     },
     position: {
       type: String,
-      default: "",
+      required: true, // Make position required
     },
     status: {
       type: String,
