@@ -43,7 +43,7 @@ const upload = multer({
 });
 
 // POST Route to Submit Career Application
-router.post("/apply", upload.single("resume"), applyForCareer);
+router.post("/submit", upload.single("resume"), applyForCareer);
 
 // GET Route to Fetch All Applications
 router.get("/", getAllCareerApplications);
