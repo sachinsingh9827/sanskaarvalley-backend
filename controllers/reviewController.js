@@ -1,7 +1,7 @@
 const Review = require("../models/ReviewModel");
 
 // ✅ Submit a Review
-const Review = require("../models/Review"); // Ensure correct path
+// Ensure correct path
 
 exports.submitReview = async (req, res) => {
   try {
