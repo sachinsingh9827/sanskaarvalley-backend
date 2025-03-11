@@ -21,6 +21,7 @@ const termsAndConditions = require("./routes/termsAndConditionsRoutes");
 const careerRoutes = require("./routes/careerRoutes");
 const jobRequirement = require("./routes/jobRequirementRoutes");
 const schoolCalendarRoutes = require("./routes/schoolCalendarRoutes");
+const review = require("./routes/reviewRoutes");
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use("/terms-and-conditions", termsAndConditions);
 app.use("/career", careerRoutes);
 app.use("/job-requirement", jobRequirement);
 app.use("/school-calendar", schoolCalendarRoutes);
+app.use("/review", review);
 
 // Default route
 app.get("/", (req, res) => {
