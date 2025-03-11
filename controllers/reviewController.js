@@ -1,10 +1,13 @@
 const Review = require("../models/ReviewModel");
 
 // ✅ Submit a Review
+const Review = require("../models/Review"); // Ensure correct path
+
 exports.submitReview = async (req, res) => {
   try {
     const { email, name, rating, comment } = req.body;
 
+    // Validate required fields
     if (!email || !name || !rating || !comment) {
       return res.status(400).json({
         success: false,
@@ -12,6 +15,17 @@ exports.submitReview = async (req, res) => {
       });
     }
 
+    // Check if a review with the same email already exists
+    const existingReview = await Review.findOne({ email });
+
+    if (existingReview) {
+      return res.status(400).json({
+        success: false,
+        message: "A review with this email already exists",
+      });
+    }
+
+    // Save the new review if email is unique
     const newReview = new Review({ email, name, rating, comment });
     await newReview.save();
 
