@@ -13,5 +13,6 @@ router.get("/status/:status", reviewController.getReviewsByStatus);
 
 // ✅ Update Review Status (Single or Multiple)
 router.put("/update-status", reviewController.updateReviewStatus);
+router.get("/get-approved-reviews", reviewController.getApprovedReviews);
 
 module.exports = router;

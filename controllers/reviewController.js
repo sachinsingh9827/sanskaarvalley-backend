@@ -122,3 +122,29 @@ exports.updateReviewStatus = async (req, res) => {
     });
   }
 };
+// ✅ Get Only Approved Reviews
+exports.getApprovedReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ status: "approved" }).lean();
+    res.status(200).json({ success: true, count: reviews.length, reviews });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+// ✅ Get Only Approved Reviews
+exports.getApprovedReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ status: "approved" }).lean();
+    res.status(200).json({ success: true, count: reviews.length, reviews });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
